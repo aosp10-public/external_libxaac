@@ -271,8 +271,9 @@ static WORD16 ixheaacd_read_block_data(
 
   if (aac_sf_data_resil_flag &&
       ((object_type == AOT_ER_AAC_ELD) || (object_type == AOT_ER_AAC_LD))) {
-    ixheaacd_rvlc_dec(ptr_aac_dec_channel_info, ptr_aac_dec_static_channel_info,
-                      it_bit_buff);
+    error_code = ixheaacd_rvlc_dec(
+        ptr_aac_dec_channel_info, ptr_aac_dec_static_channel_info, it_bit_buff);
+    if (error_code) return error_code;
 
     it_bit_buff->bit_pos = 7 - it_bit_buff->bit_pos;
   }
@@ -460,7 +461,8 @@ WORD16 ixheaacd_individual_ch_stream(
     ia_ics_info_struct *ptr_ics_info = &ptr_aac_dec_ch_info->str_ics_info;
 
     if (ch == 1) {
-      if (it_bit_buff->pstr_adts_crc_info->crc_active == 1) {
+      if (it_bit_buff->pstr_adts_crc_info->crc_active == 1 &&
+          (it_bit_buff->pstr_adts_crc_info->no_reg < 7)) {
         crc_reg =
             ixheaacd_adts_crc_start_reg(it_bit_buff->pstr_adts_crc_info,
                                         it_bit_buff, CRC_ADTS_RAW_IIND_ICS);

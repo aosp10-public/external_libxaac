@@ -316,7 +316,7 @@ WORD32 ixheaacd_usac_process(ia_dec_data_struct *pstr_dec_data,
         nr_core_coder_channels = 1;
 
       core_data_extracting:
-        if (ch_offset >= MAX_NUM_CHANNELS) return -1;
+        if (ch_offset >= MAX_NUM_CHANNELS_USAC_LVL2) return -1;
         err = ixheaacd_core_coder_data(ele_id, pstr_usac_data, elem_idx,
                                        &ch_offset, it_bit_buff,
                                        nr_core_coder_channels);
@@ -370,6 +370,13 @@ WORD32 ixheaacd_usac_process(ia_dec_data_struct *pstr_dec_data,
                 (VOID *)(pstr_usac_data->pstr_esbr_dec->frame_buffer[ch]);
           }
           if (nr_core_coder_channels == 1) {
+            if (p_state_aac_dec->mps_dec_handle.res_ch_count != 0) {
+              ptr_inp[2] = pstr_usac_data->pstr_esbr_dec->pstr_sbr_channel[1]
+                               ->str_sbr_dec.pp_qmf_buf_real;
+              ptr_inp[2 + 1] =
+                  pstr_usac_data->pstr_esbr_dec->pstr_sbr_channel[1]
+                      ->str_sbr_dec.pp_qmf_buf_imag;
+            }
             p_state_aac_dec->mps_dec_handle.p_sbr_dec[1] =
                 (VOID *)(&pstr_usac_data->pstr_esbr_dec->pstr_sbr_channel[1]
                               ->str_sbr_dec);

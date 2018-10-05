@@ -607,7 +607,7 @@ WORD32 ixheaacd_ga_hdr_dec(ia_aac_dec_state_struct *aac_state_struct,
     err = ixheaacd_config(it_bit_buff,
                           &(pstr_audio_specific_config->str_usac_config),
                           &(pstr_audio_specific_config->channel_configuration));
-    if (err != 0) return -1;
+    if (err != 0) return err;
 
     if (pstr_audio_specific_config->audio_object_type == AOT_USAC) {
       pstr_audio_specific_config->sbr_present_flag = 1;
@@ -922,7 +922,7 @@ WORD32 ixheaacd_latm_header_decode(
         result = ixheaacd_latm_audio_mux_element(
             it_bit_buff, &latm_struct_element, aac_state_struct,
             pstr_samp_rate_info);
-        if (result < 0) {
+        if (result != 0) {
           sync_status = 0;
           aac_state_struct->sync_status = sync_status;
 

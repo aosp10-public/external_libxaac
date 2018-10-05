@@ -1786,15 +1786,15 @@ IA_ERRORCODE ixheaacd_dec_init(
         p_state_enhaacplus_dec->b_n_raw_data_blk--;
       }
 
+      sample_rate_2 = sample_rate_1;
+      frame_size_2 = frame_size_1;
+
       if (!p_state_enhaacplus_dec->str_sbr_dec_info[ch_idx] &&
           p_state_enhaacplus_dec->pstr_stream_sbr[0][0].no_elements) {
         if ((p_obj_exhaacplus_dec->aac_config.flag_16khz_out == 1) &&
             (sample_rate_1 == 8000)) {
           p_obj_exhaacplus_dec->aac_config.flag_16khz_out = 0;
         }
-
-        sample_rate_2 = sample_rate_1;
-        frame_size_2 = frame_size_1;
 
         p_state_enhaacplus_dec->str_sbr_dec_info[ch_idx] = ixheaacd_init_sbr(
             sample_rate_1, frame_size_1,
@@ -1807,7 +1807,8 @@ IA_ERRORCODE ixheaacd_dec_init(
       } else {
       }
 
-      if (p_state_enhaacplus_dec->str_sbr_dec_info[ch_idx]) {
+      if (p_state_enhaacplus_dec->str_sbr_dec_info[ch_idx] &&
+          p_state_enhaacplus_dec->pstr_stream_sbr[0][0].no_elements) {
         ia_sbr_scr_struct sbr_scratch_struct;
         WORD16 num_channels_1_t = num_channels_1;
         ixheaacd_allocate_sbr_scr(
@@ -1895,6 +1896,7 @@ IA_ERRORCODE ixheaacd_dec_init(
       WORD max_ch_num = p_obj_exhaacplus_dec->aac_config.ui_max_channels;
       i = 0;
 
+      p_obj_exhaacplus_dec->aac_config.ui_n_channels = ch_idx;
       while (p_obj_exhaacplus_dec->aac_config.element_type[ch_idx_err] <= 3 &&
              p_obj_exhaacplus_dec->aac_config.element_type[ch_idx_err] >= 0) {
         ch_idx_err++;
@@ -2424,7 +2426,11 @@ IA_ERRORCODE ixheaacd_dec_execute(
             (WORD8 *)p_state_enhaacplus_dec->aac_scratch_mem_v + (8 * 1024) +
             pers_used;
       }
-      actual_out_buffer = p_state_enhaacplus_dec->coup_ch_output;
+      if (p_obj_exhaacplus_dec->aac_config.element_type[1] < 3 &&
+          p_obj_exhaacplus_dec->aac_config.element_type[1] > 0 &&
+          p_obj_exhaacplus_dec->aac_config.ui_max_channels > 2) {
+        actual_out_buffer = p_state_enhaacplus_dec->coup_ch_output;
+      }
       ch_fac = 1;
       slot_ele = 0;
     }
@@ -2439,6 +2445,9 @@ IA_ERRORCODE ixheaacd_dec_execute(
           &aac_scratch_struct, p_state_enhaacplus_dec->aac_scratch_mem_v,
           time_data, channel, p_obj_exhaacplus_dec->aac_config.ui_max_channels,
           p_state_enhaacplus_dec->audio_object_type);
+
+      if(p_state_enhaacplus_dec->ch_config == 2 && channel == 1)
+          return IA_ENHAACPLUS_DEC_EXE_NONFATAL_DECODE_FRAME_ERROR;
 
       error_code = ixheaacd_aacdec_decodeframe(
           p_obj_exhaacplus_dec, &aac_scratch_struct, actual_out_buffer,

@@ -347,7 +347,8 @@ WORD32 ixheaacd_aacdec_decodeframe(
 
             prev_data_ele_present = 1;
 
-            if (ptr_adts_crc_info->crc_active == 1) {
+            if (ptr_adts_crc_info->crc_active == 1 &&
+                ptr_adts_crc_info->no_reg < 7) {
               crc_reg = ixheaacd_adts_crc_start_reg(
                   ptr_adts_crc_info, it_bit_buff, CRC_ADTS_RAW_DATA_BLK_LEN);
             }
@@ -485,7 +486,8 @@ WORD32 ixheaacd_aacdec_decodeframe(
         {
           WORD32 flag = 1;
 
-          if ((ele_type != ID_FIL) && (ptr_adts_crc_info->crc_active == 1)) {
+          if ((ele_type != ID_FIL) && (ptr_adts_crc_info->crc_active == 1) &&
+              (ptr_adts_crc_info->no_reg < 7)) {
             crc_reg =
                 ixheaacd_adts_crc_start_reg(ptr_adts_crc_info, it_bit_buff, 0);
           }
@@ -508,7 +510,12 @@ WORD32 ixheaacd_aacdec_decodeframe(
                 goto _ia_handle_error;
               }
               aac_dec_handle->frame_status = 0;
-              error_code = IA_ENHAACPLUS_DEC_EXE_NONFATAL_DECODE_FRAME_ERROR;
+              if (error_code > 0) {
+                error_code = IA_ENHAACPLUS_DEC_EXE_NONFATAL_DECODE_FRAME_ERROR;
+                return error_code;
+              } else {
+                return error_code;
+              }
             }
           }
 
@@ -586,7 +593,8 @@ WORD32 ixheaacd_aacdec_decodeframe(
 
             prev_data_ele_present = 1;
 
-            if (ptr_adts_crc_info->crc_active == 1) {
+            if ((ptr_adts_crc_info->crc_active == 1) &&
+                (ptr_adts_crc_info->no_reg < 7)) {
               crc_reg = ixheaacd_adts_crc_start_reg(
                   ptr_adts_crc_info, it_bit_buff, CRC_ADTS_RAW_DATA_BLK_LEN);
             }

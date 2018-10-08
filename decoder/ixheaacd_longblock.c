@@ -113,10 +113,11 @@ WORD16 ixheaacd_read_section_data(
         sect_len_incr = 1;
 
       sect_len = (sect_len + sect_len_incr);
-      top = (sfb + sect_len);
 
       if (aac_spect_data_resil_flag) {
-        if (num_lines_sec_idx >= MAX_SFB_HCR) {
+        top = (sfb + sect_len);
+        if ((num_lines_sec_idx >= MAX_SFB_HCR) ||
+            (top >= MAX_SCALE_FACTOR_BANDS_LONG)) {
           return -1;
         }
         ptr_num_sect_lines[num_lines_sec_idx] =
@@ -230,8 +231,9 @@ VOID ixheaacd_read_scale_factor_data(
             bit_pos += length;
             ixheaacd_aac_read_byte_corr(&ptr_read_next, &bit_pos, &read_word,
                                         it_bit_buff->ptr_bit_buf_end);
-            while (bit_pos > 8)
-              ixheaacd_aac_read_byte(&ptr_read_next, &bit_pos, &read_word);
+
+            ixheaacd_aac_read_byte_corr1(&ptr_read_next, &bit_pos, &read_word,
+                                         it_bit_buff->ptr_bit_buf_end);
 
             norm_value = index - 60;
           }

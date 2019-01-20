@@ -81,6 +81,8 @@
 #include "ixheaacd_struct.h"
 #include "ixheaacd_function_selector.h"
 
+#include "ixheaacd_error_standards.h"
+
 #undef ALLOW_SMALL_FRAMELENGTH
 
 #define ALLOW_SMALL_FRAMELENGTH
@@ -243,9 +245,10 @@ WORD ixheaacd_decode_pce(struct ia_bit_buf_struct *it_bit_buff,
   WORD32 error_code = 0;
 
   if (*ui_pce_found_in_hdr == 1 || *ui_pce_found_in_hdr == 3) {
-    ia_program_config_struct ptr_config_element;
+    ia_program_config_struct ptr_config_element = {0};
     ptr_config_element.alignment_bits = ptr_prog_config->alignment_bits;
-    ixheaacd_read_prog_config_element(&ptr_config_element, it_bit_buff);
+    error_code =
+        ixheaacd_read_prog_config_element(&ptr_config_element, it_bit_buff);
     *ui_pce_found_in_hdr = 3;
   } else {
     error_code =
@@ -812,11 +815,12 @@ WORD32 ixheaacd_check_if_adts(ia_adts_header_struct *adts,
           (adts->profile != AAC_LC_PROFILE));
 }
 
-WORD32 ixheaacd_latm_header_decode(
+IA_ERRORCODE ixheaacd_latm_header_decode(
     ia_aac_dec_state_struct *aac_state_struct,
     struct ia_bit_buf_struct *it_bit_buff, WORD32 *bytes_consumed,
     ia_sampling_rate_info_struct *pstr_samp_rate_info) {
-  WORD32 sync, result;
+  WORD32 sync;
+  IA_ERRORCODE result;
   WORD32 next_sync, audio_mux_len_bytes_last;
   WORD32 audio_mux_len_bits_last;
   WORD32 sync_status = aac_state_struct->sync_status;
@@ -932,14 +936,14 @@ WORD32 ixheaacd_latm_header_decode(
       }
     }
   }
-  return 0;
+  return IA_NO_ERROR;
 }
 
 WORD32 ixheaacd_aac_headerdecode(
     ia_exhaacplus_dec_api_struct *p_obj_exhaacplus_dec, UWORD8 *buffer,
     WORD32 *bytes_consumed,
     const ia_aac_dec_huffman_tables_struct *pstr_huffmann_tables) {
-  struct ia_bit_buf_struct it_bit_buff, *handle_bit_buff;
+  struct ia_bit_buf_struct it_bit_buff = {0}, *handle_bit_buff;
   ia_adif_header_struct adif = {0};
   ia_adts_header_struct adts = {0};
   WORD32 result;
@@ -968,6 +972,7 @@ WORD32 ixheaacd_aac_headerdecode(
   handle_bit_buff = ixheaacd_create_bit_buf(&it_bit_buff, (UWORD8 *)buffer,
                                             (WORD16)header_len);
   handle_bit_buff->cnt_bits += (header_len << 3);
+  handle_bit_buff->xaac_jmp_buf = &aac_state_struct->xaac_jmp_buf;
 
   if (is_ga_header == 1) {
     return ixheaacd_ga_hdr_dec(aac_state_struct, header_len, bytes_consumed,
@@ -1106,6 +1111,22 @@ WORD32 ixheaacd_aac_headerdecode(
       if (err_code == 0) p_obj_exhaacplus_dec->aac_config.ui_mp4_flag = 1;
       return err_code;
     }
+
+    switch (aac_state_struct->audio_object_type) {
+        case AOT_AAC_MAIN:
+        case AOT_AAC_LC:
+        case AOT_AAC_SSR:
+        case AOT_AAC_LTP:
+        case AOT_AAC_SCAL:
+        case AOT_TWIN_VQ:
+        case AOT_ER_AAC_LD:
+        case AOT_ER_AAC_ELD:
+        case AOT_ER_AAC_LC:
+        case AOT_USAC:
+          break;
+        default:
+          return IA_ENHAACPLUS_DEC_INIT_FATAL_AUDIOOBJECTTYPE_NOT_SUPPORTED;
+      }
 
     if (aac_state_struct->audio_object_type != AOT_USAC)
       aac_state_struct->usac_flag = 0;

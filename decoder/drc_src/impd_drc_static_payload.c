@@ -1538,6 +1538,9 @@ impd_parse_gain_set_params(ia_bit_buf_struct* it_bit_buff, WORD32 version,
           *gain_seq_idx = (*gain_seq_idx) + 1;
         }
       }
+
+      if (*gain_seq_idx >= SEQUENCE_COUNT_MAX) return UNEXPECTED_ERROR;
+
       gain_set_params->gain_params[i].gain_seq_idx = *gain_seq_idx;
       err = impd_parse_gain_set_params_characteristics(
           it_bit_buff, version, &(gain_set_params->gain_params[i]));
@@ -2144,6 +2147,8 @@ impd_parse_drc_instructions_uni_drc(
       WORD32 bs_gain_set_idx;
       bs_gain_set_idx = impd_read_bits_buf(it_bit_buff, 6);
       if (it_bit_buff->error) return it_bit_buff->error;
+      if ((bs_gain_set_idx == 0) || (bs_gain_set_idx > GAIN_SET_COUNT_MAX))
+        return UNEXPECTED_ERROR;
       str_drc_instruction_str->gain_set_index[c] = bs_gain_set_idx - 1;
       impd_dec_ducking_scaling(
           it_bit_buff,
@@ -2239,6 +2244,9 @@ impd_parse_drc_instructions_uni_drc(
       str_drc_instruction_str->num_drc_ch_groups = g;
     }
 
+    if (str_drc_instruction_str->num_drc_ch_groups >
+        min(CHANNEL_GROUP_COUNT_MAX, MAX_CHANNEL_COUNT))
+      return UNEXPECTED_ERROR;
     for (g = 0; g < str_drc_instruction_str->num_drc_ch_groups; g++) {
       WORD32 set =
           (str_drc_instruction_str->drc_set_effect & EFFECT_BIT_DUCK_OTHER)
@@ -2292,6 +2300,9 @@ impd_parse_drc_instructions_uni_drc(
       bs_gain_set_idx = (temp >> 1) & 0x7f;
       repeat_gain_set_idx = temp & 1;
 
+      if ((bs_gain_set_idx == 0) || (bs_gain_set_idx > GAIN_SET_COUNT_MAX))
+        return UNEXPECTED_ERROR;
+
       str_drc_instruction_str->gain_set_index[c] = bs_gain_set_idx - 1;
       c++;
 
@@ -2344,6 +2355,10 @@ impd_parse_drc_instructions_uni_drc(
     }
 
     str_drc_instruction_str->num_drc_ch_groups = g;
+
+    if (str_drc_instruction_str->num_drc_ch_groups >
+        min(CHANNEL_GROUP_COUNT_MAX, MAX_CHANNEL_COUNT))
+      return UNEXPECTED_ERROR;
     for (g = 0; g < str_drc_instruction_str->num_drc_ch_groups; g++) {
       WORD32 set, band_count;
 

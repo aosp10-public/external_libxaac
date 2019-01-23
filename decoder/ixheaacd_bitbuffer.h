@@ -106,6 +106,8 @@ ia_bit_buf_struct *ixheaacd_create_init_bit_buf(ia_bit_buf_struct *it_bit_buff,
 
 WORD32 ixheaacd_read_bits_buf(ia_bit_buf_struct *it_bit_buff, WORD no_of_bits);
 
+WORD32 ixheaacd_skip_bits_buf(ia_bit_buf_struct *it_bit_buff, WORD no_of_bits);
+
 WORD32 ixheaacd_show_bits_buf(ia_bit_buf_struct *it_bit_buff, WORD no_of_bits);
 
 VOID ixheaacd_read_bidirection(ia_bit_buf_struct *it_bit_buff,
@@ -115,9 +117,6 @@ UWORD32 ixheaacd_aac_showbits_32(UWORD8 *ptr_read_next);
 
 UWORD32 ixheaacd_aac_read_byte(UWORD8 **ptr_read_next, WORD32 *bit_pos,
                                WORD32 *readword);
-
-UWORD32 ixheaacd_aac_read_2bytes(UWORD8 **ptr_read_next, WORD32 *bit_pos,
-                                 WORD32 *readword);
 
 UWORD32 ixheaacd_aac_read_byte_corr(UWORD8 **ptr_read_next, WORD32 *ptr_bit_pos,
                                     WORD32 *readword, UWORD8 *p_bit_buf_end);

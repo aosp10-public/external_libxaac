@@ -349,6 +349,10 @@ WORD32 ixheaacd_reset_hf_generator(ia_sbr_hf_generator_struct *ptr_hf_gen_str,
 
   patch = 0;
 
+  if ((goal_sb < sb) && (lsb > src_start_band)) {
+    return -1;
+  }
+
   while (((sb - usb) < 0) && (patch < MAX_NUM_PATCHES)) {
     ia_patch_param_struct *ptr_loc_patch_param = &p_str_patch_param[patch];
 
@@ -427,12 +431,12 @@ VOID ixheaacd_rescale_x_overlap(
     ia_sbr_dec_struct *ptr_sbr_dec, ia_sbr_header_data_struct *ptr_header_data,
     ia_sbr_frame_info_data_struct *ptr_frame_data,
     ia_sbr_prev_frame_data_struct *ptr_frame_data_prev,
-    WORD32 **pp_overlap_buffer_real, FLAG low_pow_flag) {
+    WORD32 **pp_overlap_buffer_real, WORD32 **pp_overlap_buffer_imag,
+    FLAG low_pow_flag) {
   WORD32 k, l;
   WORD32 start_band, end_band;
   WORD32 target_lsb, target_usb;
   WORD32 source_scale, target_scale, delta_scale, reserve;
-  WORD32 **pp_overlap_buffer_imag = &pp_overlap_buffer_real[MAX_ENV_COLS];
 
   WORD32 old_lsb = ptr_frame_data_prev->max_qmf_subband_aac;
   WORD32 start_slot =
